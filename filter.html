@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+
+	<body>
+		<div style="margin: 20px auto;width: 1700px;">
+			<canvas id="canvasA" width="800" height="560" style="display: block;float:left;border: 1px solid #aaa;"></canvas>
+			<canvas id="canvasB" width="800" height="560" style="display: block;float:right;border: 1px solid #aaa;"></canvas>
+		</div>
+		<div style="clear: both;"></div>
+		<div style="text-align: center;margin-top: 50px;font-size: 20px;">
+			<a href="javascript:greyEffect()">Grey Effect</a>
+			<a href="javascript:blackEffect()">black and white Effect</a>
+			<a href="javascript:reverseEffect()">reverse Effect</a>
+			<a href="javascript:blurEffect()">blur Effect</a>
+			<a href="javascript:mosaicEffect()">mosaic Effect</a>
+		</div>
+		<script>
+			var canvasA = document.getElementById("canvasA");
+			var contextA = canvasA.getContext("2d");
+
+			var canvasB = document.getElementById("canvasB");
+			var contextB = canvasB.getContext("2d");
+
+			var image = new Image();
+
+			window.onload = function() {
+				image.src = "img/autumn.jpg";
+				image.onload = function() {
+					contextA.drawImage(image, 0, 0, canvasA.width, canvasA.height);
+				}
+			}
+
+			function greyEffect() {
+				//				getImageData() 复制画布上指定矩形的像素数据，然后通过 putImageData() 将图像数据放回画布：
+				var imageData = contextA.getImageData(0, 0, canvasA.width, canvasA.height);
+				var pixelData = imageData.data;
+
+				for(var i = 0; i < canvasB.width * canvasB.height; i++) {
+					var r = pixelData[i * 4 + 0];
+					var g = pixelData[i * 4 + 1];
+					var b = pixelData[i * 4 + 2];
+
+					var grey = r * 0.3 + g * 0.59 + b * 0.11;
+
+					pixelData[i * 4 + 0] = grey;
+					pixelData[i * 4 + 1] = grey;
+					pixelData[i * 4 + 2] = grey;
+				}
+
+				contextB.putImageData(imageData, 0, 0, 0, 0, canvasB.width, canvasB.height);
+			}
+
+			function blackEffect() {
+				var imageData = contextA.getImageData(0, 0, canvasA.width, canvasA.height)
+				var pixelData = imageData.data
+				var pv = null;
+				for(var i = 0; i < canvasB.width * canvasB.height; i++) {
+					var r = pixelData[i * 4 + 0]
+					var g = pixelData[i * 4 + 1]
+					var b = pixelData[i * 4 + 2]
+
+					var grey = r * 0.3 + g * 0.59 + b * 0.11
+					if(grey > 125) {
+						pv = 255
+					} else {
+						pv = 0
+					}
+
+					pixelData[i * 4 + 0] = pv
+					pixelData[i * 4 + 1] = pv
+					pixelData[i * 4 + 2] = pv
+				}
+				contextB.putImageData(imageData, 0, 0, 0, 0, canvasA.width, canvasA.height)
+			}
+
+			function reverseEffect() {
+				var imageData = contextA.getImageData(0, 0, canvasA.width, canvasA.height)
+				var pixelData = imageData.data
+				var pv = null;
+				for(var i = 0; i < canvasB.width * canvasB.height; i++) {
+					var r = pixelData[i * 4 + 0]
+					var g = pixelData[i * 4 + 1]
+					var b = pixelData[i * 4 + 2]
+
+					pixelData[i * 4 + 0] = 255 - r;
+					pixelData[i * 4 + 1] = 255 - g;
+					pixelData[i * 4 + 2] = 255 - b;
+				}
+				contextB.putImageData(imageData, 0, 0, 0, 0, canvasA.width, canvasA.height)
+			}
+
+			function blurEffect() {
+				var tmpImageData = contextA.getImageData(0, 0, canvasA.width, canvasA.height);
+				var tmpPixelData = tmpImageData.data;
+
+				var ImageData = contextA.getImageData(0, 0, canvasA.width, canvasA.height);
+				var PixelData = ImageData.data;
+
+				var blurR = 3;
+				var totalNum = (2 * blurR + 1) * (2 * blurR + 1);
+
+				for(var i = blurR; i < canvasB.height - blurR; i++) {
+					for(var j = blurR; j < canvasB.width - blurR; j++) {
+						var totalr = 0,
+							totalg = 0,
+							totalb = 0;
+						for(var dx = -blurR; dx <= blurR; dx++) {
+							for(var dy = -blurR; dy <= blurR; dy++) {
+								var x = i + dx;
+								var y = j + dy;
+
+								var p = x * canvasB.width + y;
+								totalr += tmpPixelData[p * 4 + 0];
+								totalg += tmpPixelData[p * 4 + 1];
+								totalb += tmpPixelData[p * 4 + 2];
+							}
+						}
+
+						var p = i * canvasB.width + j;
+						PixelData[p * 4 + 0] = totalr / totalNum;
+						PixelData[p * 4 + 1] = totalg / totalNum;
+						PixelData[p * 4 + 2] = totalb / totalNum;
+					}
+				}
+				contextB.putImageData(ImageData, 0, 0, 0, 0, canvasB.width, canvasB.height);
+			}
+
+			function mosaicEffect() {
+				  var tmpImageData = contextA.getImageData( 0 , 0 , canvasA.width , canvasA.height )
+            var tmpPixelData = tmpImageData.data
+
+            var imageData = contextA.getImageData( 0 , 0 , canvasA.width , canvasA.height )
+            var pixelData = imageData.data
+
+            var size = 16
+            var totalnum = size*size
+            for( var i = 0 ; i < canvasB.height ; i += size )
+                for( var j = 0 ; j < canvasB.width ; j += size ){
+
+                    var totalr = 0 , totalg = 0 , totalb = 0
+                    for( var dx = 0 ; dx < size ; dx ++ )
+                        for( var dy = 0 ; dy < size ; dy ++ ){
+
+                            var x = i + dx
+                            var y = j + dy
+
+                            var p = x*canvasB.width + y
+                            totalr += tmpPixelData[p*4+0]
+                            totalg += tmpPixelData[p*4+1]
+                            totalb += tmpPixelData[p*4+2]
+                        }
+
+                    var p = i*canvasB.width+j
+                    var resr = totalr / totalnum
+                    var resg = totalg / totalnum
+                    var resb = totalb / totalnum
+
+                    for( var dx = 0 ; dx < size ; dx ++ )
+                        for( var dy = 0 ; dy < size ; dy ++ ){
+
+                            var x = i + dx
+                            var y = j + dy
+
+                            var p = x*canvasB.width + y
+                            pixelData[p*4+0] = resr
+                            pixelData[p*4+1] = resg
+                            pixelData[p*4+2] = resb
+                        }
+            }
+
+            contextB.putImageData( imageData , 0 , 0 , 0 , 0 , canvasB.width, canvasB.height )
+
+			}
+		</script>
+	</body>
+
+</html>
